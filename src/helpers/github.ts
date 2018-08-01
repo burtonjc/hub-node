@@ -35,7 +35,7 @@ export const createAuthorization = async (credentials: ICredentials, otp?: strin
 
       return createAuthorization(credentials, otp);
     } else if (error.statusCode === 422) {
-      await deleteAuthorization(credentials, otp);
+      await deleteCurrentAuthorization(credentials, otp);
 
       return createAuthorization(credentials, otp);
     } else {
@@ -44,7 +44,7 @@ export const createAuthorization = async (credentials: ICredentials, otp?: strin
   }
 }
 
-const deleteAuthorization = async (credentials: ICredentials, otp?: string) => {
+const deleteCurrentAuthorization = async (credentials: ICredentials, otp?: string) => {
   const authorizations = await request.get('https://api.github.com/authorizations', {
     auth: credentials,
     headers: otp ? getHeaders({ 'X-GitHub-OTP': otp }) : getHeaders(),
