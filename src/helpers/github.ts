@@ -1,69 +1,42 @@
 import * as inquirer from 'inquirer';
 import * as request from 'request-promise-native';
 
+import { askForGitHubOTP } from './inquirer';
+
+const pkg = require('../../package.json');
+
+const getHeaders = (headers?: { [prop: string]: any }) => {
+  return Object.assign({
+    'User-Agent': pkg.name,
+  }, headers);
+}
+
 export interface ICredentials {
   password: string;
   username: string;
 }
 
-export const createAuthorization = async (credentials: ICredentials) => {
-  let response;
-
+export const createAuthorization = async (credentials: ICredentials, otp?: string): Promise<string> =>  {
   try {
-    response = await request.post('https://api.github.com/authorizations', {
+    const response = await request.post('https://api.github.com/authorizations', {
       auth: credentials,
-      headers: {
-        'User-Agent': 'hub-node'
-      },
+      headers: otp ? getHeaders({ 'X-GitHub-OTP': otp }) : getHeaders(),
       json: {
         note: 'hub-node: CLI for GitHub written in NodeJS and available from NPM',
         note_url: 'https://github.com/burtonjc/hub-node',
         scopes: 'repo',
       }
     });
+
+    return response.token;
   } catch (error) {
     if (error.statusCode === 401 && error.response.headers['x-github-otp']) {
-      const code = await askForGitHub2FA();
+      const { otp } = await askForGitHubOTP();
 
-      response = await request.post('https://api.github.com/authorizations', {
-        auth: credentials,
-        headers: {
-          'User-Agent': 'hub-node',
-          'X-GitHub-OTP': code,
-        },
-        json: {
-          note: 'hub-node: CLI for GitHub written in NodeJS and available from NPM',
-          note_url: 'https://github.com/burtonjc/hub-node',
-          scopes: 'repo',
-        }
-      });
+      return createAuthorization(credentials, otp);
+    } else {
+      return Promise.reject(error);
     }
   }
 
-  return response.token;
-}
-
-export const askForGitHub2FA = async () => {
-  const questions = [
-    {
-      message: 'Enter your GitHub two factor auth code:',
-      name: 'code',
-      type: 'input',
-      validate: validateIsString('Please enter your two factor auth code.'),
-    }
-  ];
-
-  const { code } = await (inquirer.prompt(questions) as Promise<{ code: string }>);
-
-  return code;
-}
-
-const validateIsString = (failMessage: string) => {
-  return (value: string) => {
-    if (value.length) {
-      return true;
-    } else {
-      return failMessage;
-    }
-  };
 }

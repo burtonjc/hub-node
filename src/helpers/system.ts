@@ -1,17 +1,12 @@
 import * as fs from 'fs';
 
-export const isGitRepository = () => {
+export const verifyIsGitRepository = () => {
   return new Promise((resolve, reject) => {
     fs.stat(`${process.cwd()}/.git`, (err, result) => {
-      if (!err) {
-        resolve(result.isDirectory());
-        return;
-      }
-
-      if (err.message.startsWith('ENOENT')) {
-        resolve(false);
+      if (err || !result.isDirectory()) {
+        reject('This is not a git repository!');
       } else {
-        reject(err);
+        resolve();
       }
     });
   });

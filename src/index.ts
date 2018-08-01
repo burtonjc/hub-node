@@ -1,17 +1,19 @@
 import chalk from 'chalk';
 
-import { isGitRepository } from './helpers/system';
+import { verifyIsGitRepository } from './helpers/system';
 import { getOAuthToken } from './helpers/config';
 
 const main = async () => {
-  if (!await isGitRepository()) {
-    console.error(chalk.red('This is not a git repository!'));
-    process.exit();
+  try {
+    await verifyIsGitRepository();
+
+    const token = await getOAuthToken();
+    console.log(token);
+
+  } catch (error) {
+    console.error(chalk.red(error));
+    process.exit(1);
   }
-
-  const token = await getOAuthToken();
-
-  console.log(token);
 }
 
 main();
