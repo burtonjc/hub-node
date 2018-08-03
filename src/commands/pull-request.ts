@@ -1,6 +1,7 @@
-import { ParsedArgs } from 'minimist';
-import { promisify } from 'util';
 import { exec } from 'child_process';
+import { ParsedArgs } from 'minimist';
+import * as request from 'request-promise-native';
+import { promisify } from 'util';
 
 import { Command } from '../models/command';
 
@@ -14,6 +15,36 @@ export class PullRequestCommand extends Command {
 
     await assertBranchExists(base);
     await assertBranchExists(head);
+
+    await openPullRequest(base, head, token);
+  }
+}
+
+const openPullRequest = async (base: string, head: string, token: string) => {
+  const { owner, repo } = await getOwnerRepo();
+
+  return request.post({
+    url: `https://api.github.com/repos/${owner}/${repo}/pulls`,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'User-Agent': 'Hub-Node'
+    },
+    json: {
+      base,
+      head,
+    }
+  });
+}
+
+const getOwnerRepo = async () => {
+  const remotes = (await cmd('git remote -v')).stdout;
+  const origin = remotes.match(/origin\sgit@github\.com:(\S+)\.git\s\(push\)/);
+  if (!origin) {
+    throw new Error('Could not determin origin.');
+  } else {
+    const ownerRepo = origin[1];
+    const [ owner, repo ] = ownerRepo.split('/');
+    return { owner, repo };
   }
 }
 
