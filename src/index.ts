@@ -11,9 +11,9 @@ import { CommandConstructor } from './models/command';
 const main = async () => {
   try {
     await verifyIsGitRepository();
-    runCommand();
+    await runCommand();
   } catch (error) {
-    console.error(chalk.red(error));
+    console.error(chalk.red(error.message || error));
     process.exit(1);
   }
 }
@@ -33,12 +33,11 @@ const runCommand = async () => {
   const command = commands[commandName];
 
   if (!command) {
-    console.error(chalk.red(`Unknown command: ${commandName}`));
-    process.exit(1);
+    throw new Error(`Unknown command: ${commandName}`);
   }
 
   const token = await getOAuthToken();
-  (new command()).run(argv, token);
+  await (new command()).run(argv, token);
 }
 
 main();

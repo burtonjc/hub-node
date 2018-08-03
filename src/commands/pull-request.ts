@@ -12,7 +12,8 @@ export class PullRequestCommand extends Command {
     const base = argv.base || argv.b || 'master';
     const head = argv.head || argv.h || currentBranch;
 
-    console.log({ base, head });
+    await assertBranchExists(base);
+    await assertBranchExists(head);
   }
 }
 
@@ -25,5 +26,14 @@ const getCurrentBranchName = async () => {
     return branchMatch[1];
   } else {
     return null;
+  }
+}
+
+const assertBranchExists = async (branch: string) => {
+  const branches = (await cmd('git branch -l')).stdout;
+  const regex = new RegExp(`(?:\\s|^)${branch}(\\s|$)`);
+
+  if (!regex.test(branches)) {
+    throw new Error(`Branch does not exist: ${branch}`);
   }
 }
