@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
+    "build:watch": "npm run build -- --watch",
     "clean:build": "rm -rf lib",
     "prebuild": "npm run clean:build",
     "prepublish": "npm run build",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@types/configstore": "^2.1.1",
     "@types/inquirer": "0.0.42",
+    "@types/minimist": "^1.2.0",
     "@types/node": "^10.5.5",
     "@types/request-promise-native": "^1.0.15",
     "ts-node": "^7.0.0",
