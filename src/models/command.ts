@@ -5,5 +5,5 @@ export interface CommandConstructor {
 }
 
 export abstract class Command {
-  public abstract run(argv: ParsedArgs, token: string): void;
+  public abstract async run(argv: ParsedArgs, token: string): Promise<void>;
 }
